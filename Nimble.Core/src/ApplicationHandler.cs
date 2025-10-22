@@ -4,10 +4,9 @@ using Silk.NET.Windowing;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 
-namespace Nimble.Prototype
+namespace Nimble.Core
 {
 	/// <summary>
 	/// 애플리케이션 핸들러.
