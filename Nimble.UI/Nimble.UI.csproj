@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AssemblyName>Nimble.UI</AssemblyName>
+		<TargetFramework>net8.0</TargetFramework>
+		<PublishSingleFile>false</PublishSingleFile>
+		<SelfContained>false</SelfContained>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Nimble.Core\Nimble.Core.csproj" />
+	</ItemGroup>
+</Project>

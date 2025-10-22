@@ -23,12 +23,12 @@
 ## 프로젝트 구성
 |프로젝트|설명|
 |:---|:---|
-|Nimble.Core|-|
-|Nimble.UI|-|
+|Nimble.Core|기반 프레임워크.|
+|Nimble.UI|UI 프레임워크.|
 |Nimble.Application|-|
 |Nimble.Application.Windows|-|
 |Nimble.Application.macOS|-|
 |Nimble.Application.Linux|-|
 |Nimble.Application.Android|-|
 |Nimble.Application.iOS|-|
-|Nimble.Prototype|-|
+|Nimble.Prototype|Nimble.Core을 사용한 최소한의 플랫폼 이벤트 및 렌더링 루프. (개발을 위한 데스크탑 앱 빌드)|

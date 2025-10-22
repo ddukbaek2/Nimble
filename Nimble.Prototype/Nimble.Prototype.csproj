@@ -8,5 +8,6 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Nimble.Core\Nimble.Core.csproj" />
+	  <ProjectReference Include="..\Nimble.UI\Nimble.UI.csproj" />
 	</ItemGroup>
 </Project>
