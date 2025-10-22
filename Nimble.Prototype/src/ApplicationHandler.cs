@@ -153,6 +153,7 @@ namespace Nimble.Prototype
 			m_Window.Load += OnInitialize;
 			m_Window.FramebufferResize += OnResize;
 			m_Window.Update += OnUpdate;
+			m_Window.Render += OnDraw;
 			m_Window.Closing += OnFinalize;
 			//m_Window.FileDrop += (_) => m_IsRendering = true;
 			//m_Window.MouseMove += (_, __) => m_IsRendering = true;
@@ -168,16 +169,19 @@ namespace Nimble.Prototype
 					m_Window.DoEvents();
 					if (!m_Window.IsClosing)
 					{
-						m_Window.DoUpdate();
+						// 기존 업데이트 처리 사용 안함.
+						//m_Window.DoUpdate();
 					}
 					if (!m_Window.IsClosing)
 					{
+						// 기존 렌더 처리 사용 안함.
 						//m_Window.DoRender();
+
+						// 렌더링이 필요할 때만 처리.
 						if (!m_IsRendering)
 							return;
 
-						OnDraw(0.0);
-						m_Window.SwapBuffers();
+						m_Window.DoRender();
 						m_IsRendering = false;
 					}
 				}
