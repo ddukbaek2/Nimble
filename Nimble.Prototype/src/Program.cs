@@ -16,11 +16,11 @@ namespace Nimble.Prototype
 		{
 			Console.WriteLine($"[PrototypeScene] OnDraw()");
 
-			canvas.Clear(SKColors.White);
+			//canvas.Clear(SKColors.White);
 			using var paint = new SKPaint { IsAntialias = true, TextSize = 48 };
 			canvas.DrawCircle(140, 140, 90, paint);
 			canvas.DrawText($"PrototypeScene", 260, 160, paint);
-			canvas.Flush();
+			//canvas.Flush();
 		}
 	}
 

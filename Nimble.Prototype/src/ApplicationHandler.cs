@@ -123,10 +123,12 @@ namespace Nimble.Prototype
 			//canvas.Flush();
 
 			var canvas = m_SKSurface.Canvas;
+			canvas.Clear(SKColors.White);
 			foreach (var scene in m_Scenes.ToArray())
 			{
 				scene.Draw(canvas);
 			}
+			canvas.Flush();
 
 			//m_GRContext.Flush();
 		}
