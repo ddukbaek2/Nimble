@@ -3,6 +3,7 @@ using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using SkiaSharp;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 
@@ -22,6 +23,11 @@ namespace Nimble.Prototype
 		private bool m_IsRendering;
 
 		/// <summary>
+		/// 씬 목록.
+		/// </summary>
+		private List<Scene> m_Scenes;
+
+		/// <summary>
 		/// 생성.
 		/// </summary>
 		public ApplicationHandler()
@@ -33,6 +39,7 @@ namespace Nimble.Prototype
 			m_GRBackendRenderTarget = null;
 			m_SKSurface = null;
 			m_IsRendering = false;
+			m_Scenes = new List<Scene>();
 		}
 
 		/// <summary>
@@ -40,7 +47,7 @@ namespace Nimble.Prototype
 		/// </summary>
 		protected virtual void OnInitialize()
 		{
-			Console.WriteLine($"[ApplicationHandler] OnInitialize()");
+			Console.WriteLine($"[ApplicationHandler] OnCreate()");
 
 			m_GL = GL.GetApi(m_Window);
 			m_GRGLInterface = GRGlInterface.Create();
@@ -55,7 +62,7 @@ namespace Nimble.Prototype
 		/// </summary>
 		protected virtual void OnFinalize()
 		{
-			Console.WriteLine($"[ApplicationHandler] OnFinalize()");
+			Console.WriteLine($"[ApplicationHandler] OnDestroy()");
 
 			m_GRBackendRenderTarget.Dispose();
 			m_SKSurface.Dispose();
@@ -91,6 +98,11 @@ namespace Nimble.Prototype
 		protected virtual void OnUpdate(double timeDelta)
 		{
 			Console.WriteLine($"[ApplicationHandler] OnUpdate({timeDelta})");
+
+			foreach (var scene in m_Scenes.ToArray())
+			{
+				scene.Update(timeDelta);
+			}
 		}
 
 		/// <summary>
@@ -103,13 +115,20 @@ namespace Nimble.Prototype
 
 			Console.WriteLine($"[ApplicationHandler] OnDraw({timeDelta})");
 
+			//var canvas = m_SKSurface.Canvas;
+			//canvas.Clear(SKColors.White);
+			//using var paint = new SKPaint { IsAntialias = true, TextSize = 48 };
+			//canvas.DrawCircle(140, 140, 90, paint);
+			//canvas.DrawText($"Hello Skia: {timeDelta}", 260, 160, paint);
+			//canvas.Flush();
+
 			var canvas = m_SKSurface.Canvas;
-			canvas.Clear(SKColors.White);
-			using var paint = new SKPaint { IsAntialias = true, TextSize = 48 };
-			canvas.DrawCircle(140, 140, 90, paint);
-			canvas.DrawText($"Hello Skia: {timeDelta}", 260, 160, paint);
-			canvas.Flush();
-			m_GRContext.Flush();
+			foreach (var scene in m_Scenes.ToArray())
+			{
+				scene.Draw(canvas);
+			}
+
+			//m_GRContext.Flush();
 		}
 
 		/// <summary>
@@ -127,40 +146,10 @@ namespace Nimble.Prototype
 		}
 
 		/// <summary>
-		/// 실행.
+		/// 수동 이벤트 루프.
 		/// </summary>
-		public int RunAsRealtimeRendering()
-		{
-			m_Window = CreateWindow();
-			m_Window.Load += OnInitialize;
-			m_Window.FramebufferResize += OnResize;
-			m_Window.Update += OnUpdate;
-			m_Window.Render += OnDraw;
-			m_Window.Closing += OnFinalize;
-
-			// 자동 이벤트 루프.
-			m_Window.Run();
-			return 0;
-		}
-
-		/// <summary>
-		/// 실행.
-		/// </summary>
-		public int RunAsMinimumRendering()
-		{
-			m_Window = CreateWindow();
-			m_Window.IsEventDriven = false;
-			m_Window.Load += OnInitialize;
-			m_Window.FramebufferResize += OnResize;
-			m_Window.Update += OnUpdate;
-			m_Window.Render += OnDraw;
-			m_Window.Closing += OnFinalize;
-			//m_Window.FileDrop += (_) => m_IsRendering = true;
-			//m_Window.MouseMove += (_, __) => m_IsRendering = true;
-			//m_Window.MouseDown += (_, __) => m_IsRendering = true;
-			//m_Window.KeyDown += (_, __) => m_IsRendering = true;
-
-			// 수동 이벤트 루프.
+		private void RunEventLoop()
+		{	
 			m_Window.Initialize();
 			m_Window.Run
 			(
@@ -189,6 +178,74 @@ namespace Nimble.Prototype
 
 			m_Window.DoEvents();
 			m_Window.Reset();
+		}
+
+		/// <summary>
+		/// 실행.
+		/// </summary>
+		public int RunAsRealtimeRendering(Scene scene)
+		{
+			if (scene != null)
+			{
+				scene.Create();
+				m_Scenes.Add(scene);
+			}
+
+			m_Window = CreateWindow();
+			m_Window.Load += OnInitialize;
+			m_Window.FramebufferResize += OnResize;
+			m_Window.Update += OnUpdate;
+			m_Window.Render += OnDraw;
+			m_Window.Closing += OnFinalize;
+			//m_Window.FileDrop += (_) => m_IsRendering = true;
+			//m_Window.MouseMove += (_, __) => m_IsRendering = true;
+			//m_Window.MouseDown += (_, __) => m_IsRendering = true;
+			//m_Window.KeyDown += (_, __) => m_IsRendering = true;
+
+			// 자동 이벤트 루프.
+			m_Window.Run();
+
+			if (scene != null)
+			{
+				scene.Destroy();
+				m_Scenes.Remove(scene);
+			}
+
+			return 0;
+		}
+
+		/// <summary>
+		/// 실행.
+		/// </summary>
+		public int RunAsMinimumRendering(Scene scene)
+		{
+			if (scene != null)
+			{
+				scene.Create();
+				m_Scenes.Add(scene);
+			}
+
+			m_Window = CreateWindow();
+			m_Window.IsEventDriven = false;
+			m_Window.Load += OnInitialize;
+			m_Window.FramebufferResize += OnResize;
+			m_Window.Update += OnUpdate;
+			m_Window.Render += OnDraw;
+			m_Window.Closing += OnFinalize;
+			m_Window.FileDrop += (_) => m_IsRendering = true;
+			//m_Window.MouseMove += (_, __) => m_IsRendering = true;
+			//m_Window.MouseDown += (_, __) => m_IsRendering = true;
+			//m_Window.KeyDown += (_, __) => m_IsRendering = true;
+
+			// 수동 이벤트 루프.
+			RunEventLoop();
+
+			if (scene != null)
+			{
+				scene.Destroy();
+				m_Scenes.Remove(scene);
+			}
+
 			return 0;
 		}
 	}

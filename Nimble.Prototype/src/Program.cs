@@ -1,9 +1,30 @@
+using SkiaSharp;
 using System;
-using System.Runtime.InteropServices;
 
 
 namespace Nimble.Prototype
 {
+	/// <summary>
+	/// 프로토타입 씬.
+	/// </summary>
+	public class PrototypeScene : Scene
+	{
+		/// <summary>
+		/// 출력됨.
+		/// </summary>
+		protected override void OnDraw(SKCanvas canvas)
+		{
+			Console.WriteLine($"[PrototypeScene] OnDraw()");
+
+			canvas.Clear(SKColors.White);
+			using var paint = new SKPaint { IsAntialias = true, TextSize = 48 };
+			canvas.DrawCircle(140, 140, 90, paint);
+			canvas.DrawText($"PrototypeScene", 260, 160, paint);
+			canvas.Flush();
+		}
+	}
+
+
 	/// <summary>
 	/// 프로그램.
 	/// </summary>
@@ -37,7 +58,6 @@ namespace Nimble.Prototype
 			ShowWindow(handle, SW_HIDE);
 		}
 
-
 		/// <summary>
 		/// 코드 진입점.
 		/// </summary>
@@ -46,9 +66,10 @@ namespace Nimble.Prototype
 #if !DEBUG
 			HideConsole();
 #endif
+			var prototypeScene = new PrototypeScene();
 			var applicationHandler = new ApplicationHandler();
-			//return applicationHandler.RunAsRealtimeRendering();
-			return applicationHandler.RunAsMinimumRendering();
+			//return applicationHandler.RunAsRealtimeRendering(prototypeScene);
+			return applicationHandler.RunAsMinimumRendering(prototypeScene);
 		}
 	}
 }
