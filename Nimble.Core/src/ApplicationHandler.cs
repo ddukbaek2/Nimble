@@ -1,3 +1,4 @@
+using Crockhead.Core;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
@@ -11,15 +12,17 @@ namespace Nimble.Core
 	/// <summary>
 	/// 애플리케이션 핸들러.
 	/// </summary>
-	public class ApplicationHandler
+	public class ApplicationHandler : Object
 	{
+		//public static ApplicationHandler Shared => SharedInstances.Get<ApplicationHandler>();
+
 		private IWindow m_Window;
 		private GL m_GL;
 		private GRGlInterface m_GRGLInterface;
 		private GRContext m_GRContext;
 		private GRBackendRenderTarget m_GRBackendRenderTarget;
 		private SKSurface m_SKSurface;
-		private bool m_IsRendering;
+		private bool m_IsRepainting;
 
 		/// <summary>
 		/// 씬 목록.
@@ -27,9 +30,9 @@ namespace Nimble.Core
 		private List<Scene> m_Scenes;
 
 		/// <summary>
-		/// 생성.
+		/// 생성됨.
 		/// </summary>
-		public ApplicationHandler()
+		public ApplicationHandler() : base()
 		{
 			m_Window = null;
 			m_GL = null;
@@ -37,31 +40,52 @@ namespace Nimble.Core
 			m_GRContext = null;
 			m_GRBackendRenderTarget = null;
 			m_SKSurface = null;
-			m_IsRendering = false;
+			m_IsRepainting = false;
 			m_Scenes = new List<Scene>();
+
+			SharedInstances.Clear();
+			SharedInstances.Set(this);
 		}
 
 		/// <summary>
-		/// 초기화됨.
+		/// 생성됨.
 		/// </summary>
-		protected virtual void OnInitialize()
+		protected override void OnCreate()
 		{
-			Console.WriteLine($"[ApplicationHandler] OnCreate()");
+			Console.WriteLine("[ApplicationHandler] OnCreate()");
+			base.OnCreate();
+		}
+
+		/// <summary>
+		/// 파괴됨.
+		/// </summary>
+		protected override void OnDestroy()
+		{
+			Console.WriteLine("[ApplicationHandler] OnDestroy()");
+			base.OnDestroy();
+		}
+
+		/// <summary>
+		/// 애플리케이션 로드됨.
+		/// </summary>
+		protected virtual void OnLoad()
+		{
+			Console.WriteLine("[ApplicationHandler] OnLoad()");
 
 			m_GL = GL.GetApi(m_Window);
 			m_GRGLInterface = GRGlInterface.Create();
 			m_GRContext = GRContext.CreateGl(m_GRGLInterface);
-			m_IsRendering = true;
+			m_IsRepainting = true;
 
-			OnResize(Vector2D<int>.Zero);
+			OnSize(Vector2D<int>.Zero);
 		}
 
 		/// <summary>
-		/// 종료됨.
+		/// 애플리케이션 닫힘.
 		/// </summary>
-		protected virtual void OnFinalize()
+		protected virtual void OnClose()
 		{
-			Console.WriteLine($"[ApplicationHandler] OnDestroy()");
+			Console.WriteLine("[ApplicationHandler] OnClose()");
 
 			m_GRBackendRenderTarget.Dispose();
 			m_SKSurface.Dispose();
@@ -70,11 +94,11 @@ namespace Nimble.Core
 		}
 
 		/// <summary>
-		/// 화면 크기 변경됨.
+		/// 애플리케이션 크기 변경됨.
 		/// </summary>
-		protected virtual void OnResize(Vector2D<int> size)
+		protected virtual void OnSize(Vector2D<int> size)
 		{
-			Console.WriteLine($"[ApplicationHandler] OnResize({size})");
+			Console.WriteLine($"[ApplicationHandler] OnSize({size})");
 
 			const int GL_RGBA8 = 0x8058;
 
@@ -88,7 +112,7 @@ namespace Nimble.Core
 
 			m_SKSurface?.Dispose();
 			m_SKSurface = SKSurface.Create(m_GRContext, m_GRBackendRenderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Bgra8888);
-			m_IsRendering = true;
+			m_IsRepainting = true;
 		}
 
 		/// <summary>
@@ -98,21 +122,25 @@ namespace Nimble.Core
 		{
 			Console.WriteLine($"[ApplicationHandler] OnUpdate({timeDelta})");
 
+			Objects.BeginFrame();
+
 			foreach (var scene in m_Scenes.ToArray())
 			{
 				scene.Update(timeDelta);
 			}
+
+			Objects.EndFrame();
 		}
 
 		/// <summary>
 		/// 출력.
 		/// </summary>
-		protected virtual void OnDraw(double timeDelta)
+		protected virtual void OnRender(double timeDelta)
 		{
 			if (m_SKSurface == null)
 				return;
 
-			Console.WriteLine($"[ApplicationHandler] OnDraw({timeDelta})");
+			Console.WriteLine($"[ApplicationHandler] OnRender({timeDelta})");
 
 			//var canvas = m_SKSurface.Canvas;
 			//canvas.Clear(SKColors.White);
@@ -125,7 +153,7 @@ namespace Nimble.Core
 			canvas.Clear(SKColors.White);
 			foreach (var scene in m_Scenes.ToArray())
 			{
-				scene.Draw(canvas);
+				scene.Render(canvas);
 			}
 			canvas.Flush();
 
@@ -138,7 +166,7 @@ namespace Nimble.Core
 		private IWindow CreateWindow()
 		{
 			var windowOptions = WindowOptions.Default;
-			windowOptions.Title = "Nimble.Prototype";
+			windowOptions.Title = "Nimble.Core";
 			windowOptions.Size = new Vector2D<int>(800, 600);
 			windowOptions.PreferredBitDepth = new Vector4D<int>(8, 8, 8, 8);
 			windowOptions.API = new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 3));
@@ -157,22 +185,28 @@ namespace Nimble.Core
 				() =>
 				{
 					m_Window.DoEvents();
+
+					//if (!m_Window.IsClosing)
+					//{
+					//	m_Window.DoUpdate();
+					//}
+					//if (!m_Window.IsClosing)
+					//{
+					//	m_Window.DoRender();
+					//}
+
 					if (!m_Window.IsClosing)
 					{
-						// 기존 업데이트 처리 사용 안함.
-						//m_Window.DoUpdate();
-					}
-					if (!m_Window.IsClosing)
-					{
-						// 기존 렌더 처리 사용 안함.
-						//m_Window.DoRender();
-
-						// 렌더링이 필요할 때만 처리.
-						if (!m_IsRendering)
-							return;
-
-						m_Window.DoRender();
-						m_IsRendering = false;
+						Objects.BeginFrame();
+						{
+							// 렌더링이 필요할 때만 처리.
+							if (m_IsRepainting)
+							{
+								m_Window.DoRender();
+								m_IsRepainting = false;
+							}
+						}
+						Objects.EndFrame();
 					}
 				}
 			);
@@ -188,28 +222,27 @@ namespace Nimble.Core
 		{
 			if (scene != null)
 			{
-				scene.Create();
 				m_Scenes.Add(scene);
 			}
 
 			m_Window = CreateWindow();
-			m_Window.Load += OnInitialize;
-			m_Window.FramebufferResize += OnResize;
+			m_Window.Load += OnLoad;
+			m_Window.Closing += OnClose;
+			m_Window.FramebufferResize += OnSize;
 			m_Window.Update += OnUpdate;
-			m_Window.Render += OnDraw;
-			m_Window.Closing += OnFinalize;
-			//m_Window.FileDrop += (_) => m_IsRendering = true;
-			//m_Window.MouseMove += (_, __) => m_IsRendering = true;
-			//m_Window.MouseDown += (_, __) => m_IsRendering = true;
-			//m_Window.KeyDown += (_, __) => m_IsRendering = true;
+			m_Window.Render += OnRender;
+			//m_Window.FileDrop += (_) => m_IsRepainting = true;
+			//m_Window.MouseMove += (_, __) => m_IsRepainting = true;
+			//m_Window.MouseDown += (_, __) => m_IsRepainting = true;
+			//m_Window.KeyDown += (_, __) => m_IsRepainting = true;
 
 			// 자동 이벤트 루프.
 			m_Window.Run();
 
 			if (scene != null)
 			{
-				scene.Destroy();
 				m_Scenes.Remove(scene);
+				Object.Destroy(scene);
 			}
 
 			return 0;
@@ -222,29 +255,28 @@ namespace Nimble.Core
 		{
 			if (scene != null)
 			{
-				scene.Create();
 				m_Scenes.Add(scene);
 			}
 
 			m_Window = CreateWindow();
-			m_Window.IsEventDriven = false;
-			m_Window.Load += OnInitialize;
-			m_Window.FramebufferResize += OnResize;
+			//m_Window.IsEventDriven = false;
+			m_Window.Load += OnLoad;
+			m_Window.Closing += OnClose;
+			m_Window.FramebufferResize += OnSize;
 			m_Window.Update += OnUpdate;
-			m_Window.Render += OnDraw;
-			m_Window.Closing += OnFinalize;
-			m_Window.FileDrop += (_) => m_IsRendering = true;
-			//m_Window.MouseMove += (_, __) => m_IsRendering = true;
-			//m_Window.MouseDown += (_, __) => m_IsRendering = true;
-			//m_Window.KeyDown += (_, __) => m_IsRendering = true;
+			m_Window.Render += OnRender;
+			m_Window.FileDrop += (_) => m_IsRepainting = true;
+			//m_Window.MouseMove += (_, __) => m_IsRepainting = true;
+			//m_Window.MouseDown += (_, __) => m_IsRepainting = true;
+			//m_Window.KeyDown += (_, __) => m_IsRepainting = true;
 
 			// 수동 이벤트 루프.
 			RunEventLoop();
 
 			if (scene != null)
 			{
-				scene.Destroy();
 				m_Scenes.Remove(scene);
+				Object.Destroy(scene);
 			}
 
 			return 0;

@@ -1,3 +1,4 @@
+using Crockhead.Core;
 using SkiaSharp;
 
 
@@ -6,28 +7,22 @@ namespace Nimble.Core
 	/// <summary>
 	/// 씬.
 	/// </summary>
-	public class Scene
+	public class Scene : Object
 	{
 		/// <summary>
 		/// 생성됨.
 		/// </summary>
-		public Scene()
+		protected override void OnCreate()
 		{
+			base.OnCreate();
 		}
 
 		/// <summary>
-		/// 초기화됨.
+		/// 파괴됨.
 		/// </summary>
-		protected virtual void OnCreate()
+		protected override void OnDestroy()
 		{
-		}
-
-		/// <summary>
-		/// 종료됨.
-		/// </summary>
-		protected virtual void OnDestroy()
-		{
-
+			base.OnDestroy();
 		}
 
 		/// <summary>
@@ -38,27 +33,26 @@ namespace Nimble.Core
 		}
 
 		/// <summary>
+		/// 출력 시작됨.
+		/// </summary>
+		protected virtual void OnBeginRender()
+		{
+		}
+
+		/// <summary>
 		/// 출력됨.
 		/// </summary>
-		protected virtual void OnDraw(SKCanvas canvas)
+		protected virtual void OnRender(SKCanvas canvas)
 		{
 		}
 
 		/// <summary>
-		/// 생성.
+		/// 출력 완료됨.
 		/// </summary>
-		internal void Create()
+		protected virtual void OnEndRender()
 		{
-			OnCreate();
 		}
 
-		/// <summary>
-		/// 파괴.
-		/// </summary>
-		internal void Destroy()
-		{
-			OnDestroy();
-		}
 
 		/// <summary>
 		/// 갱신.
@@ -71,9 +65,11 @@ namespace Nimble.Core
 		/// <summary>
 		/// 출력.
 		/// </summary>
-		internal void Draw(SKCanvas canvas)
+		internal void Render(SKCanvas canvas)
 		{
-			OnDraw(canvas);
+			OnBeginRender();
+			OnRender(canvas);
+			OnEndRender();
 		}
 	}
 }

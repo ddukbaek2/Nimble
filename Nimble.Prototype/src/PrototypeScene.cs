@@ -13,15 +13,12 @@ namespace Nimble.Prototype
 		/// <summary>
 		/// 출력됨.
 		/// </summary>
-		protected override void OnDraw(SKCanvas canvas)
+		protected override void OnRender(SKCanvas canvas)
 		{
-			Console.WriteLine($"[PrototypeScene] OnDraw()");
-
-			//canvas.Clear(SKColors.White);
+			Console.WriteLine($"[PrototypeScene] OnRender()");
 			using var paint = new SKPaint { IsAntialias = true, TextSize = 48 };
 			canvas.DrawCircle(140, 140, 90, paint);
 			canvas.DrawText($"PrototypeScene", 260, 160, paint);
-			//canvas.Flush();
 		}
 	}
 }
