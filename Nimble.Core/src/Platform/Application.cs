@@ -10,19 +10,59 @@ using System.Collections.Generic;
 namespace Nimble.Core
 {
 	/// <summary>
-	/// 애플리케이션 핸들러.
+	/// 애플리케이션.
 	/// </summary>
-	public class ApplicationHandler : Object
+	public sealed class Application : Object
 	{
-		//public static ApplicationHandler Shared => SharedInstances.Get<ApplicationHandler>();
+		/// <summary>
+		/// 공유 인스턴스.
+		/// </summary>
+		public static Application Shared => SharedInstances.Get<Application>();
 
+		/// <summary>
+		/// 윈도우.
+		/// </summary>
 		private IWindow m_Window;
+
+		/// <summary>
+		/// 그래픽 컨텍스트.
+		/// </summary>
 		private GL m_GL;
+
+		/// <summary>
+		/// 렌더링 컨텍스트 생성 처리기.
+		/// </summary>
 		private GRGlInterface m_GRGLInterface;
+
+		/// <summary>
+		/// 렌더링 컨텍스트.
+		/// </summary>
 		private GRContext m_GRContext;
+		
+		/// <summary>
+		/// 렌더링 대상.
+		/// </summary>
 		private GRBackendRenderTarget m_GRBackendRenderTarget;
+
+		/// <summary>
+		/// 스키아 표면.
+		/// </summary>
 		private SKSurface m_SKSurface;
+
+		/// <summary>
+		/// 렌더링 갱신 여부.
+		/// </summary>
 		private bool m_IsRepainting;
+		
+		/// <summary>
+		/// 애플리케이션 핸들러.
+		/// </summary>
+		private ApplicationHandler m_ApplicationHandler;
+
+		/// <summary>
+		/// 렌더러.
+		/// </summary>
+		private Renderer m_Renderer;
 
 		/// <summary>
 		/// 씬 목록.
@@ -32,7 +72,7 @@ namespace Nimble.Core
 		/// <summary>
 		/// 생성됨.
 		/// </summary>
-		public ApplicationHandler() : base()
+		private Application() : base()
 		{
 			m_Window = null;
 			m_GL = null;
@@ -44,38 +84,47 @@ namespace Nimble.Core
 			m_Scenes = new List<Scene>();
 
 			SharedInstances.Clear();
-			SharedInstances.Set(this);
+			SharedInstances.Set<Application>(this);
+
+			OnCreate();
+		}
+
+		/// <summary>
+		/// 해제됨.
+		/// </summary>
+		~Application()
+		{
+			OnDestroy();
 		}
 
 		/// <summary>
 		/// 생성됨.
 		/// </summary>
-		protected override void OnCreate()
+		private void OnCreate()
 		{
-			Console.WriteLine("[ApplicationHandler] OnCreate()");
-			base.OnCreate();
+			Console.WriteLine("[Application] OnCreate()");
 		}
 
 		/// <summary>
 		/// 파괴됨.
 		/// </summary>
-		protected override void OnDestroy()
+		private void OnDestroy()
 		{
-			Console.WriteLine("[ApplicationHandler] OnDestroy()");
-			base.OnDestroy();
+			Console.WriteLine("[Application] OnDestroy()");
 		}
 
 		/// <summary>
 		/// 애플리케이션 로드됨.
 		/// </summary>
-		protected virtual void OnLoad()
+		private void OnLoad()
 		{
-			Console.WriteLine("[ApplicationHandler] OnLoad()");
+			Console.WriteLine("[Application] OnLoad()");
 
 			m_GL = GL.GetApi(m_Window);
 			m_GRGLInterface = GRGlInterface.Create();
 			m_GRContext = GRContext.CreateGl(m_GRGLInterface);
 			m_IsRepainting = true;
+			m_ApplicationHandler.InternalLoad();
 
 			OnSize(Vector2D<int>.Zero);
 		}
@@ -83,9 +132,11 @@ namespace Nimble.Core
 		/// <summary>
 		/// 애플리케이션 닫힘.
 		/// </summary>
-		protected virtual void OnClose()
+		private void OnClose()
 		{
-			Console.WriteLine("[ApplicationHandler] OnClose()");
+			Console.WriteLine("[Application] OnClose()");
+
+			m_ApplicationHandler.InternalClose();
 
 			m_GRBackendRenderTarget.Dispose();
 			m_SKSurface.Dispose();
@@ -96,9 +147,9 @@ namespace Nimble.Core
 		/// <summary>
 		/// 애플리케이션 크기 변경됨.
 		/// </summary>
-		protected virtual void OnSize(Vector2D<int> size)
+		private void OnSize(Vector2D<int> size)
 		{
-			Console.WriteLine($"[ApplicationHandler] OnSize({size})");
+			Console.WriteLine($"[Application] OResize({size})");
 
 			const int GL_RGBA8 = 0x8058;
 
@@ -112,35 +163,37 @@ namespace Nimble.Core
 
 			m_SKSurface?.Dispose();
 			m_SKSurface = SKSurface.Create(m_GRContext, m_GRBackendRenderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Bgra8888);
+			m_Renderer = new Renderer(m_SKSurface.Canvas);
 			m_IsRepainting = true;
+
+			m_ApplicationHandler.InternalResize(size);
 		}
 
 		/// <summary>
 		/// 갱신.
 		/// </summary>
-		protected virtual void OnUpdate(double timeDelta)
+		private void OnUpdate(double timeDelta)
 		{
-			Console.WriteLine($"[ApplicationHandler] OnUpdate({timeDelta})");
+			Console.WriteLine($"[Application] OnUpdate({timeDelta})");
 
-			Objects.BeginFrame();
-
+			ManagedObjectHelper.BeginFrame();
 			foreach (var scene in m_Scenes.ToArray())
 			{
-				scene.Update(timeDelta);
+				scene.InternalUpdate(timeDelta);
 			}
-
-			Objects.EndFrame();
+			m_ApplicationHandler.InternalUpdate(timeDelta);
+			ManagedObjectHelper.EndFrame();
 		}
 
 		/// <summary>
 		/// 출력.
 		/// </summary>
-		protected virtual void OnRender(double timeDelta)
+		private void OnRender(double timeDelta)
 		{
 			if (m_SKSurface == null)
 				return;
 
-			Console.WriteLine($"[ApplicationHandler] OnRender({timeDelta})");
+			Console.WriteLine($"[Application] OnRender({timeDelta})");
 
 			//var canvas = m_SKSurface.Canvas;
 			//canvas.Clear(SKColors.White);
@@ -149,15 +202,41 @@ namespace Nimble.Core
 			//canvas.DrawText($"Hello Skia: {timeDelta}", 260, 160, paint);
 			//canvas.Flush();
 
-			var canvas = m_SKSurface.Canvas;
+			//var canvas = m_SKSurface.Canvas;
+			var canvas = m_Renderer.Canvas;
 			canvas.Clear(SKColors.White);
 			foreach (var scene in m_Scenes.ToArray())
 			{
-				scene.Render(canvas);
+				scene.InternalRender(m_Renderer);
 			}
+			m_ApplicationHandler.InternalRender(timeDelta);
 			canvas.Flush();
 
 			//m_GRContext.Flush();
+		}
+
+		/// <summary>
+		/// 씬 추가.
+		/// </summary>
+		public void AddScene(Scene scene)
+		{
+			m_Scenes.Add(scene);
+		}
+
+		/// <summary>
+		/// 씬 제거.
+		/// </summary>
+		public void RemoveScene(Scene scene)
+		{
+			m_Scenes.Remove(scene);
+		}
+
+		/// <summary>
+		/// 모든 씬 제거.
+		/// </summary>
+		public void RemoveAllScenes()
+		{
+			m_Scenes.Clear();
 		}
 
 		/// <summary>
@@ -178,7 +257,7 @@ namespace Nimble.Core
 		/// 수동 이벤트 루프.
 		/// </summary>
 		private void RunEventLoop()
-		{	
+		{
 			m_Window.Initialize();
 			m_Window.Run
 			(
@@ -197,7 +276,7 @@ namespace Nimble.Core
 
 					if (!m_Window.IsClosing)
 					{
-						Objects.BeginFrame();
+						ManagedObjectHelper.BeginFrame();
 						{
 							// 렌더링이 필요할 때만 처리.
 							if (m_IsRepainting)
@@ -206,7 +285,7 @@ namespace Nimble.Core
 								m_IsRepainting = false;
 							}
 						}
-						Objects.EndFrame();
+						ManagedObjectHelper.EndFrame();
 					}
 				}
 			);
@@ -218,13 +297,8 @@ namespace Nimble.Core
 		/// <summary>
 		/// 실행.
 		/// </summary>
-		public int RunAsRealtimeRendering(Scene scene)
+		public int RunAsRealtimeRendering()
 		{
-			if (scene != null)
-			{
-				m_Scenes.Add(scene);
-			}
-
 			m_Window = CreateWindow();
 			m_Window.Load += OnLoad;
 			m_Window.Closing += OnClose;
@@ -239,11 +313,8 @@ namespace Nimble.Core
 			// 자동 이벤트 루프.
 			m_Window.Run();
 
-			if (scene != null)
-			{
-				m_Scenes.Remove(scene);
-				Object.Destroy(scene);
-			}
+			// 모든 씬 제거.
+			RemoveAllScenes();
 
 			return 0;
 		}
@@ -251,13 +322,8 @@ namespace Nimble.Core
 		/// <summary>
 		/// 실행.
 		/// </summary>
-		public int RunAsMinimumRendering(Scene scene)
+		public int RunAsMinimalRendering()
 		{
-			if (scene != null)
-			{
-				m_Scenes.Add(scene);
-			}
-
 			m_Window = CreateWindow();
 			//m_Window.IsEventDriven = false;
 			m_Window.Load += OnLoad;
@@ -273,12 +339,22 @@ namespace Nimble.Core
 			// 수동 이벤트 루프.
 			RunEventLoop();
 
-			if (scene != null)
-			{
-				m_Scenes.Remove(scene);
-				Object.Destroy(scene);
-			}
+			// 모든 씬 제거.
+			RemoveAllScenes();
 
+			return 0;
+		}
+
+		/// <summary>
+		/// 실행.
+		/// </summary>
+		public static int Run(ApplicationHandler applicationHandler)
+		{
+			var application = new Application();
+			application.m_ApplicationHandler = applicationHandler;
+			
+			//application.RunAsRealtimeRendering();
+			application.RunAsMinimalRendering();
 			return 0;
 		}
 	}

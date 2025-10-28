@@ -1,13 +1,12 @@
 using Crockhead.Core;
-using System;
 
 
 namespace Nimble.Core
 {
 	/// <summary>
-	/// 기본 님블 오브젝트.
+	/// 관리되는 객체.
 	/// </summary>
-	public abstract class Object
+	public abstract class ManagedObject : Object
 	{
 		/// <summary>
 		/// 생성됨 여부.
@@ -32,19 +31,19 @@ namespace Nimble.Core
 		/// <summary>
 		/// 생성됨.
 		/// </summary>
-		public Object() : base()
+		public ManagedObject() : base()
 		{
 			m_IsCreated = false;
 			m_IsDestroyed = false;
-			Objects.Register(this);
+			ManagedObjectHelper.Register(this);
 		}
 
 		/// <summary>
 		/// 소멸됨.
 		/// </summary>
-		~Object()
+		~ManagedObject()
 		{
-			Objects.Unregister(this);
+			ManagedObjectHelper.Unregister(this);
 		}
 
 		/// <summary>
@@ -88,7 +87,7 @@ namespace Nimble.Core
 		/// <summary>
 		/// 생성.
 		/// </summary>
-		public static T Create<T>(params object[] arguments) where T : Object
+		public static T Create<T>(params object[] arguments) where T : ManagedObject
 		{
 			var obj = Reflections.CreateInstance<T>(arguments);
 			return obj;
@@ -97,7 +96,7 @@ namespace Nimble.Core
 		/// <summary>
 		/// 파괴. (예약)
 		/// </summary>
-		public static void Destroy(Object obj)
+		public static void Destroy(ManagedObject obj)
 		{
 			if (obj == null)
 				return;
@@ -105,13 +104,13 @@ namespace Nimble.Core
 			if (obj.IsDestroyed)
 				return;
 
-			Objects.ReserveUnregister(obj);
+			ManagedObjectHelper.ReserveUnregister(obj);
 		}
 
 		/// <summary>
 		/// 즉시 파괴.
 		/// </summary>
-		public static void DestroyImmediate(Object obj)
+		public static void DestroyImmediate(ManagedObject obj)
 		{
 			if (obj == null)
 				return;
@@ -119,7 +118,7 @@ namespace Nimble.Core
 			if (obj.IsDestroyed)
 				return;
 
-			Objects.Unregister(obj);
+			ManagedObjectHelper.Unregister(obj);
 		}
 	}
 }

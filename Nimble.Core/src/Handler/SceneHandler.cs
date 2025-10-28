@@ -1,13 +1,9 @@
-using Crockhead.Core;
-using SkiaSharp;
-
-
 namespace Nimble.Core
 {
 	/// <summary>
-	/// 씬.
+	/// 씬 핸들러.
 	/// </summary>
-	public class Scene : Object
+	public class SceneHandler : ManagedObject
 	{
 		/// <summary>
 		/// 생성됨.
@@ -42,7 +38,7 @@ namespace Nimble.Core
 		/// <summary>
 		/// 출력됨.
 		/// </summary>
-		protected virtual void OnRender(SKCanvas canvas)
+		protected virtual void OnRender(Renderer renderer)
 		{
 		}
 
@@ -57,7 +53,7 @@ namespace Nimble.Core
 		/// <summary>
 		/// 갱신.
 		/// </summary>
-		internal void Update(double timeDelta)
+		internal void InternalUpdate(double timeDelta)
 		{
 			OnUpdate(timeDelta);
 		}
@@ -65,10 +61,10 @@ namespace Nimble.Core
 		/// <summary>
 		/// 출력.
 		/// </summary>
-		internal void Render(SKCanvas canvas)
+		internal void InternalRender(Renderer renderer)
 		{
 			OnBeginRender();
-			OnRender(canvas);
+			OnRender(renderer);
 			OnEndRender();
 		}
 	}

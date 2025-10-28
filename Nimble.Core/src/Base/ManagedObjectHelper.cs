@@ -6,38 +6,38 @@ using PlaceHolder = System.Byte;
 namespace Nimble.Core
 {
 	/// <summary>
-	/// 오브젝트 유틸리티.
+	/// 관리되는 객체 유틸리티.
 	/// </summary>
-	public static class Objects
+	public static class ManagedObjectHelper
 	{
 		/// <summary>
 		/// 보관 중인 오브젝트 목록.
 		/// </summary>
-		private static ConcurrentDictionary<Object, PlaceHolder> s_StoredObjects;
+		private static ConcurrentDictionary<ManagedObject, PlaceHolder> s_StoredObjects;
 
 		/// <summary>
 		/// 보관중인 파괴 예약 오브젝트 목록.
 		/// </summary>
-		private static ConcurrentDictionary<Object, PlaceHolder> s_ReservedUnregisterObjects;
+		private static ConcurrentDictionary<ManagedObject, PlaceHolder> s_ReservedUnregisterObjects;
 
 		/// <summary>
 		/// 보관 중인 오브젝트 목록 프로퍼티.
 		/// </summary>
-		public static IEnumerable<Object> StoredObjects => s_StoredObjects.Keys;
+		public static IEnumerable<ManagedObject> StoredObjects => s_StoredObjects.Keys;
 
 		/// <summary>
 		/// 생성됨.
 		/// </summary>
-		static Objects()
+		static ManagedObjectHelper()
 		{
-			s_StoredObjects = new ConcurrentDictionary<Object, PlaceHolder>();
-			s_ReservedUnregisterObjects = new ConcurrentDictionary<Object, PlaceHolder>();
+			s_StoredObjects = new ConcurrentDictionary<ManagedObject, PlaceHolder>();
+			s_ReservedUnregisterObjects = new ConcurrentDictionary<ManagedObject, PlaceHolder>();
 		}
 
 		/// <summary>
 		/// 등록.
 		/// </summary>
-		public static bool Register(Object obj)
+		public static bool Register(ManagedObject obj)
 		{
 			if (obj == null)
 				return false;
@@ -57,7 +57,7 @@ namespace Nimble.Core
 		/// <summary>
 		/// 등록 해제.
 		/// </summary>
-		public static bool Unregister(Object obj)
+		public static bool Unregister(ManagedObject obj)
 		{
 			if (obj == null)
 				return false;
@@ -95,7 +95,7 @@ namespace Nimble.Core
 		/// <summary>
 		/// 등록 여부 반환.
 		/// </summary>
-		public static bool IsRegistered(Object obj)
+		public static bool IsRegistered(ManagedObject obj)
 		{
 			if (obj == null)
 				return false;
@@ -110,7 +110,7 @@ namespace Nimble.Core
 		/// <summary>
 		/// 등록 해제 예약.
 		/// </summary>
-		public static bool ReserveUnregister(Object obj)
+		public static bool ReserveUnregister(ManagedObject obj)
 		{
 			if (!IsRegistered(obj))
 				return false;
@@ -126,7 +126,7 @@ namespace Nimble.Core
 		/// <summary>
 		/// 등록 해제 예약 여부 반환.
 		/// </summary>
-		public static bool IsReservedUnregister(Object obj)
+		public static bool IsReservedUnregister(ManagedObject obj)
 		{
 			var reservedUnregister = s_ReservedUnregisterObjects.ContainsKey(obj);
 			return reservedUnregister;

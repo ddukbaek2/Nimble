@@ -8,7 +8,7 @@ namespace Nimble.UI
 	/// <summary>
 	/// UI 씬.
 	/// </summary>
-	public class UISceneGraph : Scene
+	public class UISceneHandler : SceneHandler
 	{
 		/// <summary>
 		/// 생성됨.
@@ -29,12 +29,15 @@ namespace Nimble.UI
 		/// <summary>
 		/// 출력됨.
 		/// </summary>
-		protected override void OnRender(SKCanvas canvas)
+		protected override void OnRender(Renderer renderer)
 		{
-			Console.WriteLine($"[UISceneGraph] OnRender()");
+			Console.WriteLine($"[UISceneHandler] OnRender()");
+
+			var canvas = renderer.Canvas;
+
 			using var paint = new SKPaint { IsAntialias = true, TextSize = 48 };
 			canvas.DrawCircle(140, 140, 90, paint);
-			canvas.DrawText($"UISceneGraph", 260, 160, paint);
+			canvas.DrawText($"UISceneHandler", 260, 160, paint);
 		}
 	}
 }

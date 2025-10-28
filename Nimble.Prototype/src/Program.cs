@@ -17,8 +17,7 @@ namespace Nimble.Prototype
 
 			var prototypeScene = new PrototypeScene();
 			var applicationHandler = new ApplicationHandler();
-			//return applicationHandler.RunAsRealtimeRendering(prototypeScene);
-			return applicationHandler.RunAsMinimumRendering(prototypeScene);
+			return Application.Run(applicationHandler);
 		}
 	}
 }

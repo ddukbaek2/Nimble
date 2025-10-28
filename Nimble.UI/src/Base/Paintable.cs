@@ -1,4 +1,5 @@
 using SkiaSharp;
+using Nimble.Core;
 
 
 namespace Nimble.UI
@@ -6,8 +7,13 @@ namespace Nimble.UI
 	/// <summary>
 	/// 실제 렌더링 객체.
 	/// </summary>
-	public class Paintable
+	public sealed class Paintable : Object
 	{
+		/// <summary>
+		/// 대상 위젯.
+		/// </summary>
+		private Widget m_Widget;
+
 		/// <summary>
 		/// 렌더링 캐시.
 		/// </summary>
@@ -16,8 +22,10 @@ namespace Nimble.UI
 		/// <summary>
 		/// 생성됨.
 		/// </summary>
-		public Paintable()
+		public Paintable(Widget widget)
 		{
+			m_Widget = widget;
+			m_Cache = null;
 		}
 
 		/// <summary>

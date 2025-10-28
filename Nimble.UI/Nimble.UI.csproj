@@ -8,4 +8,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Nimble.Core\Nimble.Core.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="src\Component\" />
+	  <Folder Include="src\Controller\" />
+	  <Folder Include="src\View\" />
+	</ItemGroup>
 </Project>

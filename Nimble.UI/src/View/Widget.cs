@@ -8,7 +8,7 @@ namespace Nimble.UI
 	/// <summary>
 	/// 위젯.
 	/// </summary>
-	public class Widget : Object
+	public class Widget : ManagedObject
 	{
 		private Widget m_Parent;
 		private List<Widget> m_Children;

@@ -1,7 +1,7 @@
 using Nimble.Core;
 using SkiaSharp;
-using System;
 using System.Collections.Generic;
+using Math = System.Math;
 
 
 namespace Nimble.UI
@@ -9,7 +9,7 @@ namespace Nimble.UI
 	/// <summary>
 	/// 영역.
 	/// </summary>
-	public sealed class Region
+	public sealed class Region : Object
 	{
 		private List<SKRect> m_Rects;
 
